@@ -1,0 +1,96 @@
+default_provider = "gemini"
+
+[providers.local_mock]
+name = "local_mock"
+base_url = ""
+model = "local-model"
+default_temperature = 0.0
+default_max_tokens = 1024
+timeout_seconds = 15.0
+max_retries = 0
+api_key_env = ""
+
+[providers.gemini]
+name = "gemini"
+base_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+model = "gemini-2.0-flash"
+default_temperature = 0.2
+default_max_tokens = 8192
+timeout_seconds = 30.0
+max_retries = 2
+api_key_env = "GEMINI_API_KEY"
+
+[providers.codex]
+name = "codex"
+base_url = "https://api.openai.com/v1/completions"
+model = "codex-davinci-002"
+default_temperature = 0.2
+default_max_tokens = 4096
+timeout_seconds = 30.0
+max_retries = 2
+api_key_env = "OPENAI_API_KEY"
+
+[providers.opencode]
+name = "opencode"
+base_url = ""
+model = "opencode-model"
+default_temperature = 0.0
+default_max_tokens = 4096
+timeout_seconds = 15.0
+max_retries = 0
+api_key_env = ""
+
+[agents.planner]
+name = "planner"
+role = "planner"
+provider = "gemini"
+model = "gemini-2.0-flash"
+description = "Plans and decomposes tasks"
+
+[agents.repairer]
+name = "repairer"
+role = "repairer"
+provider = "codex"
+model = "codex-davinci-002"
+description = "Fixes code issues based on compiler diagnostics"
+
+[agents.verifier]
+name = "verifier"
+role = "verifier"
+provider = "opencode"
+model = "opencode-model"
+description = "Verifies that repairs are correct"
+
+[runtime]
+command = ["runtime/target/release/monad-runtime"]
+request_timeout_seconds = 60.0
+max_stdout_bytes = 1048576
+max_stderr_bytes = 1048576
+
+[repair]
+max_attempts = 3
+verify_after_repair = true
+allowed_extensions = [".py", ".rs", ".zero", ".toml"]
+
+[telemetry]
+log_level = "INFO"
+json_logs = true
+
+[sandbox]
+allowed_command_prefixes = ["cargo", "pytest", "ruff", "mypy", "opencode", "aider", "claude", "codex", "gemini"]
+allowed_read_roots = ["."]
+allowed_write_roots = ["."]
+
+[state]
+event_log_path = "./state/events.jsonl"
+
+# Agent-to-project-part mapping
+# Each CLI agent maps to the types of tasks it handles best.
+[project_agents]
+opencode = { role = "scaffolder", handles = ["initial scaffolding", "core logic", "multi-file edits"] }
+aider = { role = "refactorer", handles = ["git-native edits", "refactoring", "patch-based changes"] }
+claude = { role = "architect", handles = ["architecture design", "documentation", "code review"] }
+gemini = { role = "tester", handles = ["test generation", "code review", "large context analysis"] }
+codex = { role = "specialist", handles = ["boilerplate generation", "API integrations"] }
+copilot = { role = "assistant", handles = ["inline suggestions", "shell assistance"] }
+ollama = { role = "local-runner", handles = ["offline completions", "model experimentation"] }

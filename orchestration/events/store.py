@@ -1,0 +1,68 @@
+from __future__ import annotations
+
+import asyncio
+import json
+from pathlib import Path
+from typing import Protocol
+
+from orchestration.events.models import EventType, MonadEvent
+
+
+class EventStore(Protocol):
+    async def append(self, event: MonadEvent) -> None: ...
+
+    async def list_all(self) -> list[MonadEvent]: ...
+
+    async def list_by_trace(self, trace_id: str) -> list[MonadEvent]: ...
+
+
+class InMemoryEventStore:
+    def __init__(self) -> None:
+        self._lock = asyncio.Lock()
+        self._events: list[MonadEvent] = []
+
+    async def append(self, event: MonadEvent) -> None:
+        async with self._lock:
+            self._events.append(event)
+
+    async def append_many(self, events: list[MonadEvent]) -> None:
+        async with self._lock:
+            self._events.extend(events)
+
+    async def list_all(self) -> list[MonadEvent]:
+        async with self._lock:
+            return list(self._events)
+
+    async def list_by_trace(self, trace_id: str) -> list[MonadEvent]:
+        events = await self.list_all()
+        return [event for event in events if event.metadata.trace_id == trace_id]
+
+    async def list_by_type(self, event_type: EventType) -> list[MonadEvent]:
+        events = await self.list_all()
+        return [event for event in events if event.event_type == event_type]
+
+
+class JsonlEventStore:
+    def __init__(self, path: Path) -> None:
+        self._path = path
+        self._path.parent.mkdir(parents=True, exist_ok=True)
+        self._lock = asyncio.Lock()
+
+    async def append(self, event: MonadEvent) -> None:
+        line = json.dumps(event.model_dump(mode="json"), separators=(",", ":"))
+        async with self._lock:
+            with self._path.open("a", encoding="utf-8") as handle:
+                handle.write(line)
+                handle.write("\n")
+
+    async def list_all(self) -> list[MonadEvent]:
+        async with self._lock:
+            if not self._path.exists():
+                return []
+            with self._path.open("r", encoding="utf-8") as handle:
+                lines = handle.readlines()
+        return [MonadEvent.model_validate_json(line) for line in lines if line.strip()]
+
+    async def list_by_trace(self, trace_id: str) -> list[MonadEvent]:
+        events = await self.list_all()
+        return [event for event in events if event.metadata.trace_id == trace_id]
