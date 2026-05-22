@@ -10,7 +10,7 @@ from providers.base import ProviderClient, ProviderRequest, ProviderResponse
 
 
 class ProviderExecutionError(RuntimeError):
-
+    pass
 
 
 class HttpProvider(ProviderClient):

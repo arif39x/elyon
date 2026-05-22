@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 
 
 class RuntimeExecutionError(RuntimeError):
+    pass
 
 
 class RuntimeExecLimits(BaseModel):

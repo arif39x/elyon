@@ -42,6 +42,8 @@ Monad is a multi-agent CLI workspace whose main focus is to use cli agentss but 
 | `monad compile --diagnostics <file>` | Parse a structured diagnostics file                         |
 | `monad compile --exec-command "..."` | Execute a compiler command via the runtime                  |
 | `monad compile --zero <file>`        | Compile a `.zero` file and estimate token savings           |
+| `monad shell`                        | Open the interactive REPL                                   |
+| `monad tui`                          | Open the two-panel curses TUI (idea editor + agent control) |
 
 ## Agent Detection
 
@@ -57,6 +59,22 @@ Create a `.jsonl` file defining tasks, their agent assignments, and dependencies
 ```
 
 Tasks without dependencies run in **parallel**. All execution goes through the **Rust sandbox** for security.
+
+## TUI Mode
+
+`monad tui` opens a curses-based two-panel terminal interface:
+
+| Key              | Action                                |
+| ---------------- | ------------------------------------- |
+| `Tab`            | Switch focus between panels           |
+| `↑` / `↓`       | Select agent (agent panel)            |
+| Type             | Write your task idea (idea panel)      |
+| `F2`             | Run task with selected agent           |
+| `F10` / `q`      | Quit                                  |
+| `Ctrl+L`         | Toggle task result view                |
+
+**Left panel** — type your task description (multi-line supported).  
+**Right panel** — select from detected CLI agents, then press F2 to execute.
 
 ## Zero Compiler
 

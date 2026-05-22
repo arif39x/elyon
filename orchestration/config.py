@@ -11,6 +11,7 @@ from orchestration.agents import AgentSettings
 
 
 class ConfigError(RuntimeError):
+    pass
 
 
 class ProviderSettings(BaseModel):

@@ -80,6 +80,9 @@ def _build_parser() -> argparse.ArgumentParser:
     compile_parser.add_argument("--cwd", default=".")
     compile_parser.add_argument("--timeout-seconds", type=float)
 
+    subparsers.add_parser("shell")
+    subparsers.add_parser("tui")
+
     return parser
 
 
@@ -179,8 +182,13 @@ def main() -> None:
             print(HELP_TEXT)
         return
 
-    if args.command in ("shell", "tui"):
+    if args.command == "shell":
         run_interactive()
+        return
+
+    if args.command == "tui":
+        from cli.tui import run_tui
+        run_tui()
         return
 
     try:
